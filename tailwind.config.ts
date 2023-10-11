@@ -1,4 +1,4 @@
-import type { Config } from 'tailwindcss'
+import type { Config } from 'tailwindcss';
 
 const config: Config = {
   content: [
@@ -9,12 +9,21 @@ const config: Config = {
   theme: {
     extend: {
       backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic':
-          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        'nord-bg': 'url("../public/kittyboard.png")',
+      },
+      colors: {
+        bkg: '#F3FCF0',
+        content: '#1F271B',
+        tomato: '#FF6347',
+        nordWhite: '#E5E9F0',
+        'persian-green': '#2A9D8F',
+        'battleship-gray': '#82816D',
+      },
+      boxShadow: {
+        glass: '0 4px 30px rgba(0, 0, 0, 0.1)',
       },
     },
   },
   plugins: [],
-}
-export default config
+};
+export default config;
