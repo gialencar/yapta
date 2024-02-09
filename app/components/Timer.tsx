@@ -1,12 +1,19 @@
 import { Roboto_Mono } from 'next/font/google';
 import { useState, useRef, useEffect } from 'react';
+import { useTimerStore } from '../hooks/store';
 
 const spaceMono = Roboto_Mono({ weight: '700', subsets: ['latin'] });
 
 function Timer() {
+  const workDuration = useTimerStore.use.WorkDuration();
+  const shortBreakDuration = useTimerStore.use.shortBreakDuration();
+  const longBreakDuration = useTimerStore.use.longBreakDuration();
+
   const [isRunning, setIsRunning] = useState(false);
-  const [sessionLength, setSessionLength] = useState(25 * 60);
-  const [shortBreakLength, setShortBreakLength] = useState(5 * 60);
+  const [sessionLength, setSessionLength] = useState(workDuration * 60);
+  const [shortBreakLength, setShortBreakLength] = useState(
+    shortBreakDuration * 60,
+  );
   const [time, setTime] = useState(sessionLength);
   let minutesRef = useRef<HTMLSpanElement>(null);
   let secondsRef = useRef<HTMLSpanElement>(null);
@@ -50,16 +57,17 @@ function Timer() {
   }, [isRunning, time, shortBreakLength, sessionLength]);
 
   return (
-    <main className="flex flex-col items-center justify-center h-screen bg-nord-bg bg-center bg-cover bg-no-repeat">
+    // <main className="flex flex-col items-center justify-center h-screen bg-nord-bg bg-center bg-cover bg-no-repeat">
+    <>
       <div className="flex justify-between gap-x-12">
         <span className="text-nordWhite">Pomodoro</span>
         <span className="text-nordWhite">Short Break</span>
         <span className="text-nordWhite">Long Break</span>
       </div>
       <div className="flex justify-between gap-x-24">
-        <span className="text-nordWhite">25:00</span>
-        <span className="text-nordWhite">05:00</span>
-        <span className="text-nordWhite">15:00</span>
+        <span className="text-nordWhite">{`${workDuration}:00`}</span>
+        <span className="text-nordWhite">{`${shortBreakDuration}:00`}</span>
+        <span className="text-nordWhite">{`${longBreakDuration}:00`}</span>
       </div>
 
       <div className="flex flex-col">
@@ -90,7 +98,8 @@ function Timer() {
           </button>
         </div>
       </div>
-    </main>
+    </>
+    // </main>
   );
 }
 
