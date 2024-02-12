@@ -1,63 +1,64 @@
 import { Roboto_Mono } from 'next/font/google';
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTimerStore } from '../hooks/store';
+import { formatTime } from '../ultils/format-time';
 
 const spaceMono = Roboto_Mono({ weight: '700', subsets: ['latin'] });
 
 function Timer() {
-  const workDuration = useTimerStore.use.WorkDuration();
+  const workDuration = useTimerStore.use.workDuration();
   const shortBreakDuration = useTimerStore.use.shortBreakDuration();
   const longBreakDuration = useTimerStore.use.longBreakDuration();
+  // const currentSession = useTimerStore.use.currentSession();
+  const nextSession = useTimerStore.use.nextSession();
 
   const [isRunning, setIsRunning] = useState(false);
   const [sessionLength, setSessionLength] = useState(workDuration * 60);
-  const [shortBreakLength, setShortBreakLength] = useState(
-    shortBreakDuration * 60,
-  );
-  const [time, setTime] = useState(sessionLength);
-  let minutesRef = useRef<HTMLSpanElement>(null);
-  let secondsRef = useRef<HTMLSpanElement>(null);
+  const [timeLeft, setTimeLeft] = useState(sessionLength);
+  const [sessions] = useState(['work', 'shortBreak', 'longBreak']);
+  const [currentSessionIndex, setCurrentSessionIndex] = useState(0);
 
-  const startTimer = () => {
-    setIsRunning(true);
-  };
-
-  const pauseTimer = () => {
-    setIsRunning(false);
-  };
+  const [audioDom, setAudioDom] = useState<HTMLAudioElement | null>(null);
 
   const resetTimer = () => {
-    pauseTimer();
-    setTime(sessionLength);
+    setIsRunning(false);
+    setTimeLeft(sessionLength);
   };
 
   useEffect(() => {
-    if (time <= 0) {
-      pauseTimer();
-      setSessionLength(shortBreakLength);
-    }
-
-    let minutes = Math.floor(time / 60);
-    let seconds = time % 60;
-
-    minutes = minutes < 10 ? 0 + minutes : minutes;
-    seconds = seconds < 10 ? 0 + seconds : seconds;
-
-    if (minutesRef?.current && secondsRef?.current) {
-      minutesRef.current.textContent = `${minutes}`.padStart(2, '0');
-      secondsRef.current.textContent = `${seconds}`.padStart(2, '0');
-    }
-    if (isRunning) {
+    if (isRunning && timeLeft > 0) {
       const pomodoro = setInterval(() => {
-        console.log('tick');
-        setTime((time) => time - 1);
+        setTimeLeft((time) => time - 1);
       }, 1000);
       return () => clearInterval(pomodoro);
+    } else if (isRunning && timeLeft === 0) {
+      audioDom?.play();
+      setIsRunning(false);
+      const nextSessionIndex = currentSessionIndex + 1;
+      setCurrentSessionIndex(nextSessionIndex);
+      console.log(nextSessionIndex);
+      const nextSession = sessions[nextSessionIndex];
+      console.log(nextSession);
+      setTimeLeft(
+        nextSession === 'work'
+          ? workDuration * 60
+          : nextSession === 'shortBreak'
+          ? shortBreakDuration * 60
+          : longBreakDuration * 60,
+      );
     }
-  }, [isRunning, time, shortBreakLength, sessionLength]);
+  }, [
+    audioDom,
+    currentSessionIndex,
+    isRunning,
+    longBreakDuration,
+    sessions,
+    shortBreakDuration,
+    timeLeft,
+    workDuration,
+  ]);
 
   return (
-    // <main className="flex flex-col items-center justify-center h-screen bg-nord-bg bg-center bg-cover bg-no-repeat">
     <>
       <div className="flex justify-between gap-x-12">
         <span className="text-nordWhite">Pomodoro</span>
@@ -72,14 +73,10 @@ function Timer() {
 
       <div className="flex flex-col">
         <div className="bg-white/20 rounded-b-none p-12 rounded-2xl shadow-glass backdrop-blur-sm border-[1px] border-white/30">
-          <span className="text-8xl font-black text-nordWhite">
-            <span className={spaceMono.className} ref={minutesRef}>
-              25
-            </span>
-            <span>:</span>
-            <span className={spaceMono.className} ref={secondsRef}>
-              00
-            </span>
+          <span
+            className={`text-8xl font-black text-nordWhite ${spaceMono.className}`}
+          >
+            {formatTime(timeLeft)}
           </span>
         </div>
 
@@ -97,9 +94,12 @@ function Timer() {
             Reset
           </button>
         </div>
+        <audio
+          ref={(element) => setAudioDom(element)}
+          src="/flute-notification.wav"
+        ></audio>
       </div>
     </>
-    // </main>
   );
 }
 

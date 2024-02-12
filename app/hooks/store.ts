@@ -1,12 +1,15 @@
 import { create, StoreApi, UseBoundStore } from 'zustand';
 
 interface TimerStore {
-  WorkDuration: number;
+  workDuration: number;
   shortBreakDuration: number;
   longBreakDuration: number;
+  currentSession: 'work' | 'shortBreak' | 'longBreak';
   setWorkDuration: (duration: number) => void;
   setShortBreakDuration: (duration: number) => void;
   setLongBreakDuration: (duration: number) => void;
+  setCurrentSession: (session: 'work' | 'shortBreak' | 'longBreak') => void;
+  nextSession: () => void;
 }
 
 type WithSelectors<S> = S extends { getState: () => infer T }
@@ -27,11 +30,22 @@ const createSelectors = <S extends UseBoundStore<StoreApi<object>>>(
 
 export const useTimerStore = createSelectors(
   create<TimerStore>()((set) => ({
-    WorkDuration: 25,
+    workDuration: 0.05,
     shortBreakDuration: 5,
     longBreakDuration: 15,
-    setWorkDuration: (duration) => set({ WorkDuration: duration }),
+    currentSession: 'work',
+    setWorkDuration: (duration) => set({ workDuration: duration }),
     setShortBreakDuration: (duration) => set({ shortBreakDuration: duration }),
     setLongBreakDuration: (duration) => set({ longBreakDuration: duration }),
+    setCurrentSession: (session) => set({ currentSession: session }),
+    nextSession: () => {
+      set((state) => {
+        if (state.currentSession === 'work')
+          return { currentSession: 'shortBreak' };
+        else if (state.currentSession === 'shortBreak')
+          return { currentSession: 'longBreak' };
+        else return { currentSession: 'work' };
+      });
+    },
   })),
 );
