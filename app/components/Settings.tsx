@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTimerStore } from '../hooks/store';
 
 const Settings = ({ onSave }: { onSave: Function }) => {
+  // TODO: Load initial values from the store
   const [workMinutes, setWorkMinutes] = useState(25);
   const [shortBreakMinutes, setShortBreakMinutes] = useState(5);
   const [longBreakMinutes, setLongBreakMinutes] = useState(15);

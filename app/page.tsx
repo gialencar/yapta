@@ -8,7 +8,7 @@ export default function Home() {
       <div className="flex justify-end">
         <Link
           href="/settings"
-          className="text-2xl bg-nord-bg rounded-full  hover:brightness-110 hover:rotate-12 transition-all"
+          className="text-2xl bg-nord-bg rounded-full hover:brightness-110 hover:rotate-12 transition-all mb-2"
         >
           ⚙️
         </Link>

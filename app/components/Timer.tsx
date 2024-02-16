@@ -9,13 +9,12 @@ function Timer() {
   const workDuration = useTimerStore.use.workDuration();
   const shortBreakDuration = useTimerStore.use.shortBreakDuration();
   const longBreakDuration = useTimerStore.use.longBreakDuration();
-  // const currentSession = useTimerStore.use.currentSession();
-  const nextSession = useTimerStore.use.nextSession();
 
   const [isRunning, setIsRunning] = useState(false);
   const [sessionLength, setSessionLength] = useState(workDuration * 60);
-  const [timeLeft, setTimeLeft] = useState(sessionLength);
-  const [sessions] = useState(['work', 'shortBreak', 'longBreak']);
+  const [timeLeft, setTimeLeft] = useState(0.05 * 60);
+  // const [sessions] = useState(['work', 'shortBreak', 'longBreak']);
+  const [sessions, setSessions] = useState(0);
   const [currentSessionIndex, setCurrentSessionIndex] = useState(0);
 
   const [audioDom, setAudioDom] = useState<HTMLAudioElement | null>(null);
@@ -26,30 +25,31 @@ function Timer() {
   };
 
   useEffect(() => {
+    let timer: NodeJS.Timeout;
+
     if (isRunning && timeLeft > 0) {
-      const pomodoro = setInterval(() => {
+      timer = setInterval(() => {
         setTimeLeft((time) => time - 1);
       }, 1000);
-      return () => clearInterval(pomodoro);
     } else if (isRunning && timeLeft === 0) {
+      // setIsRunning(false);
       audioDom?.play();
-      setIsRunning(false);
-      const nextSessionIndex = currentSessionIndex + 1;
-      setCurrentSessionIndex(nextSessionIndex);
-      console.log(nextSessionIndex);
-      const nextSession = sessions[nextSessionIndex];
-      console.log(nextSession);
+
+      const nextSessionCount = sessions + 1;
+      setSessions(nextSessionCount);
+
       setTimeLeft(
-        nextSession === 'work'
+        nextSessionCount % 7 === 0
+          ? longBreakDuration * 60
+          : nextSessionCount % 2 === 0
           ? workDuration * 60
-          : nextSession === 'shortBreak'
-          ? shortBreakDuration * 60
-          : longBreakDuration * 60,
+          : shortBreakDuration * 60,
       );
+
+      return () => clearInterval(timer);
     }
   }, [
     audioDom,
-    currentSessionIndex,
     isRunning,
     longBreakDuration,
     sessions,
@@ -61,21 +61,37 @@ function Timer() {
   return (
     <>
       <div className="flex justify-between gap-x-12">
-        <span className="text-nordWhite">Pomodoro</span>
-        <span className="text-nordWhite">Short Break</span>
-        <span className="text-nordWhite">Long Break</span>
+        <span
+          className={`text-nordWhite border rounded-lg border-r-4 px-1 ${
+            currentSessionIndex === 0 ? 'border-r-tomato' : 'border-r-nordWhite'
+          }`}
+        >
+          Pomodoro
+        </span>
+        <span
+          className={`text-nordWhite border rounded-lg border-r-4 px-1 ${
+            currentSessionIndex === 1 ? 'border-r-blue-400' : 'border-r-nordWhite'
+          }`}
+        >
+          Short Break
+        </span>
+        <span
+          className={`text-nordWhite border rounded-lg border-r-4 px-1 ${
+            currentSessionIndex === 2 ? 'border-r-teal-600' : 'border-r-nordWhite'
+          }`}
+        >
+          Long Break
+        </span>
       </div>
       <div className="flex justify-between gap-x-24">
-        <span className="text-nordWhite">{`${workDuration}:00`}</span>
-        <span className="text-nordWhite">{`${shortBreakDuration}:00`}</span>
-        <span className="text-nordWhite">{`${longBreakDuration}:00`}</span>
+        <span className="text-nordWhite flex-1 text-right">{`${workDuration}:00`}</span>
+        <span className="text-nordWhite flex-1 text-center">{`${shortBreakDuration}:00`}</span>
+        <span className="text-nordWhite flex-1 text-left">{`${longBreakDuration}:00`}</span>
       </div>
 
       <div className="flex flex-col">
         <div className="bg-white/20 rounded-b-none p-12 rounded-2xl shadow-glass backdrop-blur-sm border-[1px] border-white/30">
-          <span
-            className={`text-8xl font-black text-nordWhite ${spaceMono.className}`}
-          >
+          <span className={`text-8xl font-black text-nordWhite ${spaceMono.className}`}>
             {formatTime(timeLeft)}
           </span>
         </div>
@@ -94,10 +110,7 @@ function Timer() {
             Reset
           </button>
         </div>
-        <audio
-          ref={(element) => setAudioDom(element)}
-          src="/flute-notification.wav"
-        ></audio>
+        <audio ref={(element) => setAudioDom(element)} src="/flute-notification.wav"></audio>
       </div>
     </>
   );

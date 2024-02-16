@@ -31,7 +31,7 @@ const createSelectors = <S extends UseBoundStore<StoreApi<object>>>(
 export const useTimerStore = createSelectors(
   create<TimerStore>()((set) => ({
     workDuration: 0.05,
-    shortBreakDuration: 5,
+    shortBreakDuration: 0.05,
     longBreakDuration: 15,
     currentSession: 'work',
     setWorkDuration: (duration) => set({ workDuration: duration }),
