@@ -1,9 +1,10 @@
 import { Roboto_Mono } from 'next/font/google';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTimerStore } from '../hooks/store';
 import { formatTime } from '../ultils/format-time';
 
 const spaceMono = Roboto_Mono({ weight: '700', subsets: ['latin'] });
+type SessionType = 'work' | 'shortBreak' | 'longBreak';
 
 function Timer() {
   const workDuration = useTimerStore.use.workDuration();
@@ -12,10 +13,9 @@ function Timer() {
 
   const [isRunning, setIsRunning] = useState(false);
   const [sessionLength, setSessionLength] = useState(workDuration * 60);
-  const [timeLeft, setTimeLeft] = useState(0.05 * 60);
-  // const [sessions] = useState(['work', 'shortBreak', 'longBreak']);
-  const [sessions, setSessions] = useState(0);
-  const [currentSessionIndex, setCurrentSessionIndex] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(workDuration);
+  const [session, setSession] = useState<SessionType>('work');
+  const [workSessionsCount, setWorkSessionsCount] = useState(0);
 
   const [audioDom, setAudioDom] = useState<HTMLAudioElement | null>(null);
 
@@ -24,60 +24,61 @@ function Timer() {
     setTimeLeft(sessionLength);
   };
 
+  const switchSession = useCallback(() => {
+    if (session === 'work') {
+      const newWorkSessionsCount = workSessionsCount + 1;
+      setWorkSessionsCount(newWorkSessionsCount);
+      if (newWorkSessionsCount % 4 === 0) {
+        setSession('longBreak');
+        setSessionLength(longBreakDuration /* * 60 */);
+        setTimeLeft(longBreakDuration /* * 60 */);
+      } else {
+        setSession('shortBreak');
+        setSessionLength(shortBreakDuration /* * 60 */);
+        setTimeLeft(shortBreakDuration /* * 60 */);
+      }
+    } else {
+      setSession('work');
+      setSessionLength(workDuration /* * 60 */);
+      setTimeLeft(workDuration /* * 60 */);
+    }
+  }, [longBreakDuration, session, shortBreakDuration, workDuration, workSessionsCount]);
+
   useEffect(() => {
     let timer: NodeJS.Timeout;
 
     if (isRunning && timeLeft > 0) {
       timer = setInterval(() => {
         setTimeLeft((time) => time - 1);
-      }, 1000);
+      }, 50);
     } else if (isRunning && timeLeft === 0) {
-      // setIsRunning(false);
-      audioDom?.play();
-
-      const nextSessionCount = sessions + 1;
-      setSessions(nextSessionCount);
-
-      setTimeLeft(
-        nextSessionCount % 7 === 0
-          ? longBreakDuration * 60
-          : nextSessionCount % 2 === 0
-          ? workDuration * 60
-          : shortBreakDuration * 60,
-      );
-
-      return () => clearInterval(timer);
+      setIsRunning(false);
+      // audioDom?.play();
+      switchSession();
     }
-  }, [
-    audioDom,
-    isRunning,
-    longBreakDuration,
-    sessions,
-    shortBreakDuration,
-    timeLeft,
-    workDuration,
-  ]);
+    return () => clearInterval(timer);
+  }, [audioDom, isRunning, switchSession, timeLeft]);
 
   return (
     <>
       <div className="flex justify-between gap-x-12">
         <span
           className={`text-nordWhite border rounded-lg border-r-4 px-1 ${
-            currentSessionIndex === 0 ? 'border-r-tomato' : 'border-r-nordWhite'
+            session === 'work' ? 'border-r-tomato' : 'border-r-nordWhite'
           }`}
         >
           Pomodoro
         </span>
         <span
           className={`text-nordWhite border rounded-lg border-r-4 px-1 ${
-            currentSessionIndex === 1 ? 'border-r-blue-400' : 'border-r-nordWhite'
+            session === 'shortBreak' ? 'border-r-blue-400' : 'border-r-nordWhite'
           }`}
         >
           Short Break
         </span>
         <span
           className={`text-nordWhite border rounded-lg border-r-4 px-1 ${
-            currentSessionIndex === 2 ? 'border-r-teal-600' : 'border-r-nordWhite'
+            session === 'longBreak' ? 'border-r-teal-600' : 'border-r-nordWhite'
           }`}
         >
           Long Break
