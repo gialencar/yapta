@@ -1,5 +1,5 @@
 import { Roboto_Mono } from 'next/font/google';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Countdown, { CountdownApi } from 'react-countdown';
 import { useTimerStore } from '../hooks/store';
 import { Button } from './Button';
@@ -18,11 +18,11 @@ export const Timer = () => {
   const [sessionLengthInSeconds, setSessionLengthInSeconds] = useState(
     workDuration * 60
   );
-  const [date, setDate] = useState(Date.now() + 26 * 1000);
+  const [date, setDate] = useState(Date.now() + sessionLengthInSeconds * 1000);
   const [session, setSession] = useState<SessionType>('work');
   const [workSessionsCount, setWorkSessionsCount] = useState(0);
 
-  let countdownApi: CountdownApi | null = null;
+  const countdownApiRef = useRef<CountdownApi | null>(null);
 
   const switchSession = () => {
     if (session === 'work') {
@@ -42,39 +42,41 @@ export const Timer = () => {
   };
 
   const handleStartPause = (): void => {
-    countdownApi && (isRunning ? countdownApi.pause() : countdownApi.start());
+    countdownApiRef.current &&
+      (isRunning
+        ? countdownApiRef.current.pause()
+        : countdownApiRef.current.start());
     setIsRunning(!isRunning);
   };
 
   const handleReset = (): void => {
     setIsRunning(false);
-    countdownApi && countdownApi.stop();
+    countdownApiRef.current && countdownApiRef.current.stop();
   };
 
   const setRef = (countdown: Countdown | null): void => {
     if (countdown) {
-      countdownApi = countdown.getApi();
+      countdownApiRef.current = countdown.getApi();
     }
   };
 
   useEffect(() => {
     setIsRunning(false);
-    countdownApi && countdownApi.stop();
-    setSessionLengthInSeconds(
+    countdownApiRef.current && countdownApiRef.current.stop();
+    const duration =
       session === 'work'
         ? workDuration * 60
         : session === 'shortBreak'
         ? shortBreakDuration * 60
-        : longBreakDuration * 60
-    );
-    setDate(Date.now() + sessionLengthInSeconds * 1000);
+        : longBreakDuration * 60;
+    setSessionLengthInSeconds(duration);
+    setDate(Date.now() + duration * 1000);
   }, [
-    sessionLengthInSeconds,
-    session,
-    workDuration,
-    shortBreakDuration,
     longBreakDuration,
-    countdownApi,
+    session,
+    sessionLengthInSeconds,
+    shortBreakDuration,
+    workDuration,
   ]);
 
   return (
@@ -118,7 +120,8 @@ export const Timer = () => {
             ref={setRef}
             autoStart={false}
             renderer={renderer}
-            onTick={() => console.log('tick')}
+            onStart={() => console.log('started')}
+            // onTick={() => console.log('tick')}
             onPause={() => console.log('paused')}
             onComplete={switchSession}
           />
