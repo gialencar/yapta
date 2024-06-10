@@ -6,6 +6,7 @@ import { Button } from './Button';
 import { renderer } from './CountdownTimer';
 
 const spaceMono = Roboto_Mono({ weight: '700', subsets: ['latin'] });
+
 type SessionType = 'work' | 'shortBreak' | 'longBreak';
 
 export const Timer = () => {
@@ -14,7 +15,9 @@ export const Timer = () => {
   const longBreakDuration = useTimerStore.use.longBreakDuration();
 
   const [isRunning, setIsRunning] = useState(false);
-  const [sessionLengthInSeconds, setSessionLengthInSeconds] = useState(workDuration * 60);
+  const [sessionLengthInSeconds, setSessionLengthInSeconds] = useState(
+    workDuration * 60
+  );
   const [date, setDate] = useState(Date.now() + 26 * 1000);
   const [session, setSession] = useState<SessionType>('work');
   const [workSessionsCount, setWorkSessionsCount] = useState(0);
@@ -27,14 +30,14 @@ export const Timer = () => {
       setWorkSessionsCount(newWorkSessionsCount);
       if (newWorkSessionsCount % 4 === 0) {
         setSession('longBreak');
-        setSessionLengthInSeconds(longBreakDuration);
+        setSessionLengthInSeconds(longBreakDuration * 60);
       } else {
         setSession('shortBreak');
-        setSessionLengthInSeconds(shortBreakDuration);
+        setSessionLengthInSeconds(shortBreakDuration * 60);
       }
     } else {
       setSession('work');
-      setSessionLengthInSeconds(workDuration);
+      setSessionLengthInSeconds(workDuration * 60);
     }
   };
 
@@ -55,14 +58,28 @@ export const Timer = () => {
   };
 
   useEffect(() => {
-    setDate(Date.now() + sessionLengthInSeconds * 1000);
     setIsRunning(false);
     countdownApi && countdownApi.stop();
-  }, [countdownApi, sessionLengthInSeconds]);
+    setSessionLengthInSeconds(
+      session === 'work'
+        ? workDuration * 60
+        : session === 'shortBreak'
+        ? shortBreakDuration * 60
+        : longBreakDuration * 60
+    );
+    setDate(Date.now() + sessionLengthInSeconds * 1000);
+  }, [
+    sessionLengthInSeconds,
+    session,
+    workDuration,
+    shortBreakDuration,
+    longBreakDuration,
+    countdownApi,
+  ]);
 
   return (
     <>
-      <div className="flex justify-between gap-x-12">
+      <div className={`flex justify-between gap-x-12 ${spaceMono.className}`}>
         <span
           className={`text-nordWhite border rounded-lg border-r-4 px-1 ${
             session === 'work' ? 'border-r-tomato' : 'border-r-nordWhite'
@@ -72,7 +89,9 @@ export const Timer = () => {
         </span>
         <span
           className={`text-nordWhite border rounded-lg border-r-4 px-1 ${
-            session === 'shortBreak' ? 'border-r-blue-400' : 'border-r-nordWhite'
+            session === 'shortBreak'
+              ? 'border-r-blue-400'
+              : 'border-r-nordWhite'
           }`}
         >
           Short Break
@@ -106,10 +125,16 @@ export const Timer = () => {
         </div>
 
         <div className="flex">
-          <Button className="rounded-t-none rounded-br-none" onClick={handleStartPause}>
+          <Button
+            className="rounded-t-none rounded-br-none"
+            onClick={handleStartPause}
+          >
             {isRunning ? 'Pause' : 'Start'}
           </Button>
-          <Button className="rounded-t-none rounded-bl-none" onClick={handleReset}>
+          <Button
+            className="rounded-t-none rounded-bl-none"
+            onClick={handleReset}
+          >
             Reset
           </Button>
         </div>
