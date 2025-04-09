@@ -1,5 +1,6 @@
 import { Roboto_Mono } from 'next/font/google';
-import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Countdown, { CountdownApi } from 'react-countdown';
 import { useTimerStore } from '../hooks/store';
 import { Button } from './Button';
@@ -12,19 +13,30 @@ type SessionType = 'work' | 'shortBreak' | 'longBreak';
 const SESSIONS_BEFORE_LONG_BREAK = 4;
 const SECONDS_IN_MINUTE = 60;
 const MILLISECONDS_IN_SECOND = 1000;
+const DEBUG_ACCELERATION_FACTOR = 60; // 60x mais rápido (minutos viram segundos)
 
 export const Timer = () => {
+  const searchParams = useSearchParams();
+  const isTestMode = useMemo(() => {
+    return (
+      typeof window !== 'undefined' && searchParams.get('testMode') === 'true'
+    );
+  }, [searchParams]);
+
   const workDuration = useTimerStore.use.workDuration();
   const shortBreakDuration = useTimerStore.use.shortBreakDuration();
-  const longBreakDuration = useTimerStore.use.longBreakDuration();
+  const longBreakDuration = useTimerStore.use.longBreakDuration(); // Pode ser controlado por um botão, etc.
 
   const [isRunning, setIsRunning] = useState(false);
   const [sessionLengthInSeconds, setSessionLengthInSeconds] = useState(
     workDuration * SECONDS_IN_MINUTE
   );
-  const [date, setDate] = useState(Date.now() + sessionLengthInSeconds * MILLISECONDS_IN_SECOND);
   const [session, setSession] = useState<SessionType>('work');
   const [workSessionsCount, setWorkSessionsCount] = useState(0);
+
+  const [date, setDate] = useState(
+    Date.now() + sessionLengthInSeconds * MILLISECONDS_IN_SECOND
+  );
 
   const countdownApiRef = useRef<CountdownApi | null>(null);
 
@@ -44,7 +56,9 @@ export const Timer = () => {
 
   const handleStartPause = (): void => {
     countdownApiRef.current &&
-      (isRunning ? countdownApiRef.current.pause() : countdownApiRef.current.start());
+      (isRunning
+        ? countdownApiRef.current.pause()
+        : countdownApiRef.current.start());
     setIsRunning(!isRunning);
   };
 
@@ -62,15 +76,31 @@ export const Timer = () => {
   useEffect(() => {
     setIsRunning(false);
     countdownApiRef.current && countdownApiRef.current.stop();
-    const duration =
+    const durationInMinutes =
       session === 'work'
-        ? workDuration * SECONDS_IN_MINUTE
+        ? workDuration
         : session === 'shortBreak'
-        ? shortBreakDuration * SECONDS_IN_MINUTE
-        : longBreakDuration * SECONDS_IN_MINUTE;
-    setSessionLengthInSeconds(duration);
-    setDate(Date.now() + duration * MILLISECONDS_IN_SECOND);
-  }, [longBreakDuration, session, shortBreakDuration, workDuration]);
+        ? shortBreakDuration
+        : longBreakDuration;
+
+    let durationInSeconds = durationInMinutes * SECONDS_IN_MINUTE;
+
+    if (isTestMode) {
+      durationInSeconds = Math.max(
+        1,
+        Math.round(durationInSeconds / DEBUG_ACCELERATION_FACTOR)
+      );
+    }
+
+    setSessionLengthInSeconds(durationInSeconds);
+    setDate(Date.now() + durationInSeconds * MILLISECONDS_IN_SECOND);
+  }, [
+    longBreakDuration,
+    session,
+    shortBreakDuration,
+    workDuration,
+    isTestMode,
+  ]);
 
   return (
     <>
