@@ -28,12 +28,18 @@ describe('Timer', () => {
   });
 
   it('starts and pauses the timer', () => {
+    jest.useFakeTimers();
     render(<Timer />);
     const startPauseButton = screen.getByText('Start');
 
     // Start the timer
+    expect(screen.getByTestId('countdown').textContent).toBe('25:00');
     fireEvent.click(startPauseButton);
     expect(startPauseButton.textContent).toBe('Pause');
+    act(() => {
+      jest.advanceTimersByTime(1000); // 1 second
+    });
+    expect(screen.getByTestId('countdown').textContent).toBe('24:59');
 
     // Pause the timer
     fireEvent.click(startPauseButton);
@@ -63,10 +69,12 @@ describe('Timer', () => {
     fireEvent.click(startPauseButton);
 
     act(() => {
-      jest.advanceTimersByTime(25 * 60 * 1000);
+      jest.advanceTimersByTime(25 * 60 * 1000); // 25 minutes
     });
 
+    expect(screen.getByText('Pomodoro')).toHaveClass('border-r-nordWhite');
     expect(screen.getByText('Short Break')).toHaveClass('border-r-blue-400');
+    expect(screen.getByText('Long Break')).toHaveClass('border-r-nordWhite');
     jest.useRealTimers();
   });
 });

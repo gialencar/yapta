@@ -17,8 +17,9 @@ export const renderer = ({ minutes, seconds }: CountdownRenderProps) => {
   return (
     <span
       className={`text-8xl font-black text-nordWhite ${spaceMono.className}`}
+      data-testid="countdown"
     >
-      {zeroPad(minutes)}:{zeroPad(seconds)}
+      {`${zeroPad(minutes)}:${zeroPad(seconds)}`}
     </span>
   );
   // }
