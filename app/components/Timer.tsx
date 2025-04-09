@@ -9,6 +9,10 @@ const spaceMono = Roboto_Mono({ weight: '700', subsets: ['latin'] });
 
 type SessionType = 'work' | 'shortBreak' | 'longBreak';
 
+const SESSIONS_BEFORE_LONG_BREAK = 4;
+const SECONDS_IN_MINUTE = 60;
+const MILLISECONDS_IN_SECOND = 1000;
+
 export const Timer = () => {
   const workDuration = useTimerStore.use.workDuration();
   const shortBreakDuration = useTimerStore.use.shortBreakDuration();
@@ -16,9 +20,9 @@ export const Timer = () => {
 
   const [isRunning, setIsRunning] = useState(false);
   const [sessionLengthInSeconds, setSessionLengthInSeconds] = useState(
-    workDuration * 60
+    workDuration * SECONDS_IN_MINUTE
   );
-  const [date, setDate] = useState(Date.now() + sessionLengthInSeconds * 1000);
+  const [date, setDate] = useState(Date.now() + sessionLengthInSeconds * MILLISECONDS_IN_SECOND);
   const [session, setSession] = useState<SessionType>('work');
   const [workSessionsCount, setWorkSessionsCount] = useState(0);
 
@@ -28,24 +32,19 @@ export const Timer = () => {
     if (session === 'work') {
       const newWorkSessionsCount = workSessionsCount + 1;
       setWorkSessionsCount(newWorkSessionsCount);
-      if (newWorkSessionsCount % 4 === 0) {
+      if (newWorkSessionsCount % SESSIONS_BEFORE_LONG_BREAK === 0) {
         setSession('longBreak');
-        setSessionLengthInSeconds(longBreakDuration * 60);
       } else {
         setSession('shortBreak');
-        setSessionLengthInSeconds(shortBreakDuration * 60);
       }
     } else {
       setSession('work');
-      setSessionLengthInSeconds(workDuration * 60);
     }
   };
 
   const handleStartPause = (): void => {
     countdownApiRef.current &&
-      (isRunning
-        ? countdownApiRef.current.pause()
-        : countdownApiRef.current.start());
+      (isRunning ? countdownApiRef.current.pause() : countdownApiRef.current.start());
     setIsRunning(!isRunning);
   };
 
@@ -65,19 +64,13 @@ export const Timer = () => {
     countdownApiRef.current && countdownApiRef.current.stop();
     const duration =
       session === 'work'
-        ? workDuration * 60
+        ? workDuration * SECONDS_IN_MINUTE
         : session === 'shortBreak'
-        ? shortBreakDuration * 60
-        : longBreakDuration * 60;
+        ? shortBreakDuration * SECONDS_IN_MINUTE
+        : longBreakDuration * SECONDS_IN_MINUTE;
     setSessionLengthInSeconds(duration);
-    setDate(Date.now() + duration * 1000);
-  }, [
-    longBreakDuration,
-    session,
-    sessionLengthInSeconds,
-    shortBreakDuration,
-    workDuration,
-  ]);
+    setDate(Date.now() + duration * MILLISECONDS_IN_SECOND);
+  }, [longBreakDuration, session, shortBreakDuration, workDuration]);
 
   return (
     <>
@@ -120,9 +113,9 @@ export const Timer = () => {
             ref={setRef}
             autoStart={false}
             renderer={renderer}
-            onStart={() => console.log('started')}
+            // onStart={() => console.log('started')}
             // onTick={() => console.log('tick')}
-            onPause={() => console.log('paused')}
+            // onPause={() => console.log('paused')}
             onComplete={switchSession}
           />
         </div>
