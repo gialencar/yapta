@@ -13,13 +13,13 @@ export function Modal() {
   const { showModal, setShowModal } = useContext(ModalContext);
 
   const [workMinutes, setWorkMinutes] = useState(
-    useTimerStore.use.workDuration()
+    useTimerStore.use.workDuration(),
   );
   const [shortBreakMinutes, setShortBreakMinutes] = useState(
-    useTimerStore.use.shortBreakDuration()
+    useTimerStore.use.shortBreakDuration(),
   );
   const [longBreakMinutes, setLongBreakMinutes] = useState(
-    useTimerStore.use.longBreakDuration()
+    useTimerStore.use.longBreakDuration(),
   );
 
   const setWorkDuration = useTimerStore.use.setWorkDuration();

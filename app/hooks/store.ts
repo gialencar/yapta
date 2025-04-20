@@ -12,10 +12,15 @@ interface TimerStore {
   nextSession: () => void;
 }
 
-type WithSelectors<S> = S extends { getState: () => infer T }
-  ? S & { use: { [K in keyof T]: () => T[K] } }
+/*
+ * https://zustand.docs.pmnd.rs/guides/auto-generating-selectors
+ * used for auto-generating hooks for each state property.
+ * eg. `useTimerStore.use.workDuration()`
+ */
+type WithSelectors<S> =
+  S extends { getState: () => infer T } ?
+    S & { use: { [K in keyof T]: () => T[K] } }
   : never;
-
 const createSelectors = <S extends UseBoundStore<StoreApi<object>>>(
   _store: S,
 ) => {
@@ -24,7 +29,6 @@ const createSelectors = <S extends UseBoundStore<StoreApi<object>>>(
   for (let k of Object.keys(store.getState())) {
     (store.use as any)[k] = () => store((s) => s[k as keyof typeof s]);
   }
-
   return store;
 };
 

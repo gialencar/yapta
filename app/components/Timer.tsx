@@ -29,13 +29,13 @@ export const Timer = () => {
 
   const [isRunning, setIsRunning] = useState(false);
   const [sessionLengthInSeconds, setSessionLengthInSeconds] = useState(
-    workDuration * SECONDS_IN_MINUTE
+    workDuration * SECONDS_IN_MINUTE,
   );
   const [session, setSession] = useState<SessionType>('work');
   const [workSessionsCount, setWorkSessionsCount] = useState(0);
 
   const [date, setDate] = useState(
-    Date.now() + sessionLengthInSeconds * MILLISECONDS_IN_SECOND
+    Date.now() + sessionLengthInSeconds * MILLISECONDS_IN_SECOND,
   );
 
   const countdownApiRef = useRef<CountdownApi | null>(null);
@@ -56,9 +56,9 @@ export const Timer = () => {
 
   const handleStartPause = (): void => {
     countdownApiRef.current &&
-      (isRunning
-        ? countdownApiRef.current.pause()
-        : countdownApiRef.current.start());
+      (isRunning ?
+        countdownApiRef.current.pause()
+      : countdownApiRef.current.start());
     setIsRunning(!isRunning);
   };
 
@@ -77,18 +77,16 @@ export const Timer = () => {
     setIsRunning(false);
     countdownApiRef.current && countdownApiRef.current.stop();
     const durationInMinutes =
-      session === 'work'
-        ? workDuration
-        : session === 'shortBreak'
-        ? shortBreakDuration
-        : longBreakDuration;
+      session === 'work' ? workDuration
+      : session === 'shortBreak' ? shortBreakDuration
+      : longBreakDuration;
 
     let durationInSeconds = durationInMinutes * SECONDS_IN_MINUTE;
 
     if (isTestMode) {
       durationInSeconds = Math.max(
         1,
-        Math.round(durationInSeconds / DEBUG_ACCELERATION_FACTOR)
+        Math.round(durationInSeconds / DEBUG_ACCELERATION_FACTOR),
       );
     }
 
@@ -114,9 +112,9 @@ export const Timer = () => {
         </span>
         <span
           className={`text-nordWhite border rounded-lg border-r-4 px-1 ${
-            session === 'shortBreak'
-              ? 'border-r-blue-400'
-              : 'border-r-nordWhite'
+            session === 'shortBreak' ? 'border-r-blue-400' : (
+              'border-r-nordWhite'
+            )
           }`}
         >
           Short Break

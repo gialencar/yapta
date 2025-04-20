@@ -1,14 +1,14 @@
-import "./globals.css";
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { ModalProvider } from "./components/modal/modalPorvider";
-import { Modal } from "./components/modal/modal";
+import './globals.css';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import { ModalProvider } from './components/modal/modalPorvider';
+import { Modal } from './components/modal/modal';
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "YAPTA - Yet Another Pomodoro Timer App",
-  description: "Yet Another Pomodoro Timer App",
+  title: 'YAPTA - Yet Another Pomodoro Timer App',
+  description: 'Yet Another Pomodoro Timer App',
 };
 
 export default function RootLayout({
